@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SEG KIP AI</title>
+
+<style>
+body{
+margin:0;
+background:#021b44;
+font-family:Arial;
+color:white;
+padding:20px;
+}
+h1{
+font-size:56px;
+color:#3db7ff;
+margin-bottom:20px;
+}
+.card{
+background:#0b2d6b;
+padding:25px;
+border-radius:24px;
+margin-bottom:20px;
+}
+#count{
+font-size:64px;
+font-weight:bold;
+}
+input{
+width:100%;
+padding:18px;
+border:none;
+border-radius:20px;
+background:#041634;
+color:white;
+font-size:22px;
+}
+.item{
+background:#08204d;
+padding:18px;
+margin-top:12px;
+border-radius:18px;
+}
+.small{
+opacity:.7;
+font-size:14px;
+margin-top:6px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>SEG KIP AI</h1>
+
+<div class="card">
+<div>Jami yozuvlar</div>
+<div id="count">0</div>
+</div>
+
+<input id="q" placeholder="Qidiruv...">
+
+<div id="list"></div>
+
+<script>
+let ROWS=[];
+
+async function load(){
+
+try{
+
+const res=await fetch('/api/base');
+const json=await res.json();
+
+console.log('API:',json);
+
+const data=json.data || [];
+
+ROWS=data.filter(r=>r && typeof r==="object");
+
+document.getElementById('count').innerText=ROWS.length;
+
+render();
+
+}catch(e){
+
+console.error(e);
+
+document.getElementById('count').innerText='XATO';
+
+}
+
+}
+
+function render(){
+
+const q=document.getElementById('q').value.toLowerCase();
+
+const arr=ROWS.filter(r=>
+JSON.stringify(r).toLowerCase().includes(q)
+);
+
+document.getElementById('list').innerHTML=
+arr.slice(0,50).map(r=>`
+
+<div class="item">
+<div><b>${r[1] || '-'}</b></div>
+<div class="small">${JSON.stringify(r)}</div>
+</div>
+
+`).join('');
+
+}
+
+document.getElementById('q').addEventListener('input',render);
+
+load();
+</script>
+
+</body>
+</html>

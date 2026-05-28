@@ -1,0 +1,124 @@
+import express from "express";
+import dotenv from "dotenv";
+import OpenAI from "openai";
+
+// .env faylni o‘qish
+dotenv.config();
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+const hasApiKey = Boolean(process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith("sk-"));
+
+const client = hasApiKey
+  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  : null;
+
+app.use(express.json({ limit: "10mb" }));
+app.use(express.static("public"));
+
+app.get("/api/health", (req, res) => {
+  res.json({
+    ok: true,
+    ai: hasApiKey ? "connected" : "demo-mode",
+    message: hasApiKey
+      ? "OpenAI API key topildi. AI rejim ishlaydi."
+      : "OPENAI_API_KEY topilmadi. Platforma demo rejimda ishlayapti."
+  });
+});
+
+app.post("/api/chat", async (req, res) => {
+  const userMessage = String(req.body?.message || "").trim();
+
+  if (!userMessage) {
+    return res.status(400).json({ error: "Savol bo‘sh bo‘lmasin." });
+  }
+
+  // API key yo‘q bo‘lsa ham platforma to‘xtab qolmaydi
+  if (!hasApiKey) {
+    return res.json({
+      answer:
+        "Demo rejim: OpenAI API key .env faylga kiritilmagan.\n\n" +
+        "AI to‘liq ishlashi uchun papkada .env fayl yarating va ichiga quyidagini yozing:\n" +
+        "OPENAI_API_KEY=sk-...\nPORT=3000\n\n" +
+        "Hozircha TAG qidiruv va lokal baza ishlaydi."
+    });
+  }
+
+  try {
+    const completion = await client.chat.completions.create({
+      model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
+      temperature: 0.35,
+      messages: [
+        {
+          role: "system",
+          content: `Siz SEG KIP Platform ichidagi professional KIP AI yordamchisiz.
+Til: foydalanuvchi qaysi tilda yozsa, shu tilda javob bering.
+Soha: neft-gaz, KIP, o‘lchov vositalari, manometr, termometr, sarf o‘lchagich, bosim datchigi, EKM, ТО-1/ТО-2, qiyoslov, pasport, formular, texnik hujjatlar.
+Korxona konteksti: СП ООО "SANOAT ENERGETIKA GURUHI", ТПП "АНДИЖАН".
+Vazifa: foydalanuvchiga KIP platforma, Excel baza, PDF pasport, qidiruv, filtr, hisobot va texnik tahlilda aniq yordam berish.
+Javoblar qisqa, aniq, professional va amaliy bo‘lsin.`
+        },
+        { role: "user", content: userMessage }
+      ]
+    });
+
+    const answer = completion.choices?.[0]?.message?.content || "AI javob qaytarmadi.";
+    res.json({ answer });
+  } catch (error) {
+    console.error("OPENAI_ERROR:", error?.message || error);
+    res.status(500).json({
+      error:
+        "AI ulanishida xatolik. .env ichidagi OPENAI_API_KEY, internet, billing yoki model nomini tekshiring.",
+      details: error?.message || "Noma’lum xato"
+    });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`SEG KIP AI Platform: http://localhost:${PORT}`);
+  console.log(hasApiKey ? "AI rejim: ulangan" : "AI rejim: demo, API key yo‘q");
+});
+
+import { google } from "googleapis";
+
+const SHEET_ID = "191RWU_J2IxqfwdwCbvopVtcb4WhRkPM1UQppVbgiLhs";
+const range = "A1:I384";
+const sheetsAuth = new google.auth.GoogleAuth({
+  keyFile: "service-account.json",
+  scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
+});
+
+async function readSheetRange(range) {
+  const client = await sheetsAuth.getClient();
+
+  const sheets = google.sheets({
+    version: "v4",
+    auth: client,
+  });
+
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId: SHEET_ID,
+    range,
+  });
+
+  return response.data.values || [];
+}
+
+app.get("/api/base", async (req, res) => {
+  try {
+    const data = await readSheetRange("'База'!A1:Z1000");
+
+    res.json({
+      ok: true,
+      count: data.length,
+      data,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: error.message,
+    });
+  }
+});
+

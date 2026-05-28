@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SEG KIP AI</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#00153a;color:white;font-family:Arial;padding:18px}
+h1{color:#45c7ff;font-size:42px;margin:20px 0}
+.top{background:#08275d;border-radius:24px;padding:20px;margin-bottom:18px}
+.menu{background:#1db7f2;color:#001;border-radius:24px;padding:22px;margin:14px 0;font-size:24px;font-weight:bold}
+.card{background:#0b2559;border-radius:22px;padding:20px;margin:14px 0;line-height:1.6;font-size:19px}
+.search{width:100%;padding:18px;border:0;border-radius:18px;background:#020d22;color:white;font-size:20px;margin:18px 0}
+.label{color:#7dd3fc;font-weight:bold}
+.count{font-size:38px;font-weight:bold}
+</style>
+</head>
+<body>
+
+<h1>SEG KIP AI</h1>
+
+<div class="top">
+  <div>Jami yozuvlar</div>
+  <div id="count" class="count">0</div>
+</div>
+
+<div id="menus"></div>
+
+<input id="search" class="search" placeholder="Qidiruv..." oninput="render()">
+
+<div id="list"></div>
+
+<script>
+let ROWS=[];
+
+function clean(v){return String(v||'').trim()}
+
+function isDataRow(r){
+  return Array.isArray(r) && r.length > 3;
+}
+
+function isMenuRow(r){
+  const a=clean(r[0]);
+  return a && !isDataRow(r) && !a.includes('-//-') && !a.includes('//');
+}
+
+async function load(){
+  try{
+    const res=await fetch('/api/base');
+    const json=await res.json();
+    const data=json.data || json || [];
+
+    ROWS=data.filter(r=>r ROWS=data.filter(r=>Array.isArray(r) && r.length>3);ROWS=data.filter(r=>Array.isArray(r) && r.length>3); typeof r==="object");
+
+    const menus=data.filter(isMenuRow).slice(0,10);
+    document.getElementById('menus').innerHTML=menus.map(r=>`<div class="menu">${clean(r[0])}</div>`).join('');
+
+    document.getElementById('count').innerText=ROWS.length;
+    render();
+  }catch(e){
+    document.getElementById('list').innerHTML='<div class="card">Xato: '+e.message+'</div>';
+  }
+}
+
+function render(){
+  const q=clean(document.getElementById('search').value).toLowerCase();
+
+  const arr=ROWS.filter(r=>JSON.stringify(r).toLowerCase().includes(q));
+
+  document.getElementById('count').innerText=arr.length;
+
+  document.getElementById('list').innerHTML=arr.slice(0,200).map(r=>`
+    <div class="card">
+      <div><span class="label">Дата:</span> ${clean(r[0]) || '-'}</div>
+      <div><span class="label">Поз номер:</span> ${clean(r[1]) || '-'}</div>
+      <div><span class="label">Наименование СИ:</span> ${clean(r[2]) || '-'}</div>
+      <div><span class="label">Тип, марка:</span> ${clean(r[3]) || '-'}</div>
+      <div><span class="label">Заводской
+cat > public/index.html <<'EOF'
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SEG KIP AI</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#00153a;color:white;font-family:Arial;padding:18px}
+h1{color:#45c7ff;font-size:42px;margin:20px 0}
+.top{background:#08275d;border-radius:24px;padding:20px;margin-bottom:18px}
+.menu{background:#1db7f2;color:#001;border-radius:24px;padding:22px;margin:14px 0;font-size:24px;font-weight:bold}
+.card{background:#0b2559;border-radius:22px;padding:20px;margin:14px 0;line-height:1.6;font-size:19px}
+.search{width:100%;padding:18px;border:0;border-radius:18px;background:#020d22;color:white;font-size:20px;margin:18px 0}
+.label{color:#7dd3fc;font-weight:bold}
+.count{font-size:38px;font-weight:bold}
+</style>
+</head>
+<body>
+
+<h1>SEG KIP AI</h1>
+
+<div class="top">
+  <div>Jami yozuvlar</div>
+  <div id="count" class="count">0</div>
+</div>
+
+<div id="menus"></div>
+
+<input id="search" class="search" placeholder="Qidiruv..." oninput="render()">
+
+<div id="list"></div>
+
+<script>
+let ROWS=[];
+
+function clean(v){return String(v||'').trim()}
+
+function isDataRow(r){
+  return Array.isArray(r) && r.length > 3;
+}
+  return /^\\d+$/.test(clean(r[1])) && clean(r[2]);
+}
+
+function isMenuRow(r){
+  const a=clean(r[0]);
+  return a && !isDataRow(r) && !a.includes('-//-') && !a.includes('//');
+}
+
+async function load(){
+  try{
+    const res=await fetch('/api/base');
+    const json=await res.json();
+    const data=json.data || json || [];
+
+    ROWS=data.filter(r=>r ROWS=data.filter(r=>Array.isArray(r) && r.length>3);ROWS=data.filter(r=>Array.isArray(r) && r.length>3); typeof r==="object");
+
+    const menus=data.filter(isMenuRow).slice(0,10);
+    document.getElementById('menus').innerHTML=menus.map(r=>`<div class="menu">${clean(r[0])}</div>`).join('');
+
+    document.getElementById('count').innerText=ROWS.length;
+    render();
+  }catch(e){
+    document.getElementById('list').innerHTML='<div class="card">Xato: '+e.message+'</div>';
+  }
+}
+
+function render(){
+  const q=clean(document.getElementById('search').value).toLowerCase();
+
+  const arr=ROWS.filter(r=>JSON.stringify(r).toLowerCase().includes(q));
+
+  document.getElementById('count').innerText=arr.length;
+
+  document.getElementById('list').innerHTML=arr.slice(0,200).map(r=>`
+    <div class="card">
+      <div><span class="label">Дата:</span> ${clean(r[0]) || '-'}</div>
+      <div><span class="label">Поз номер:</span> ${clean(r[1]) || '-'}</div>
+      <div><span class="label">Наименование СИ:</span> ${clean(r[2]) || '-'}</div>
+      <div><span class="label">Тип, марка:</span> ${clean(r[3]) || '-'}</div>
+      <div><span class="label">Заводской номер:</span> ${clean(r[4]) || '-'}</div>
+      <div><span class="label">Предел измерения:</span> ${clean(r[5]) || '-'}</div>
+      <div><span class="label">Место установки:</span> ${clean(r[6]) || '-'}</div>
+      <div><span class="label">СКВ:</span> ${clean(r[7]) || '-'}</div>
+      <div><span class="label">Перечень в/р:</span> ${clean(r[8]) || '-'}</div>
+      <div><span class="label">Исполнитель:</span> ${clean(r[9]) || '-'}</div>
+    </div>
+  `).join('');
+}
+
+load();
+</script>
+
+</body>
+</html>

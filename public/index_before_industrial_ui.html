@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SEG KIP AI</title>
+<style>
+body{margin:0;background:#021b44;color:white;font-family:Arial;padding:22px}
+h1{font-size:42px;color:#43c3ff;margin:22px 0}
+.card,.btn{background:#0b2d6b;border-radius:22px;padding:22px;margin:14px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.btn{font-size:22px;font-weight:bold;text-align:center}
+.back{color:#43c3ff;font-weight:bold;margin:12px 0}
+.small{opacity:.75;font-size:14px}
+input{width:100%;box-sizing:border-box;padding:18px;border:0;border-radius:18px;background:#041634;color:white;font-size:20px;margin:15px 0}
+</style>
+</head>
+<body>
+<div id="app">Юкланмоқда...</div>
+
+<script>
+let WB=null;
+
+const MODULES=[
+["📍","КУДУК РЎЙХАТИ","кудук рўйхати"],
+["📊","ЎЛЧОВ ВОСИТАЛАРИ",""],
+["📜","УМУМИЙ БАЗА","База"],
+["⚠️","ТЕЛЕМЕХАНИКА","Телемеханика"],
+["📊","МАНОМЕТР","Манометр"],
+["🔎","БАЗА КИП","База"]
+];
+
+async function load(){
+ const r=await fetch('/api/workbook');
+ WB=await r.json();
+ showMenu();
+}
+
+function rows(sheet){return WB.data[sheet]||[]}
+
+function showMenu(){
+app.innerHTML=`
+<h1>SEG KIP AI</h1>
+<div class="card"><b>Sanek/4-Цех</b><br>Asosiy panel</div>
+<div class="grid">
+${MODULES.map(m=>`<div class="btn" onclick="openModule('${m[2]}','${m[1]}')">${m[0]}<br>${m[1]}</div>`).join('')}
+</div>`;
+}
+
+function openModule(sheet,title){
+ if(!sheet){showEmpty(title);return}
+ if(sheet==="кудук рўйхати"){showKuduk();return}
+ showSheet(sheet,title);
+}
+
+function showEmpty(title){
+app.innerHTML=`<div class="back" onclick="showMenu()">← меню</div><h1>${title}</h1><div class="card">Бу модул ҳозирча бўш. Кейин AI босқичида тўлдирилади.</div>`;
+}
+
+function showKuduk(){
+ const hududSheets=WB.sheets.filter(s=>!["меню","кудук рўйхати","настройка","База","Манометр","Формуляр","Телемеханика","FORMULA_ANALIZ"].includes(s));
+ app.innerHTML=`
+ <div class="back" onclick="showMenu()">← меню</div>
+ <h1>КУДУК РЎЙХАТИ</h1>
+ <div class="grid">
+ ${hududSheets.map(s=>`<div class="btn" onclick="showHudud('${s}')">${s}</div>`).join('')}
+ <div class="btn" style="background:#00317a" onclick="showSheet('База','ОБЩИЕ / База')">ОБЩИЕ</div>
+ </div>`;
+}
+
+function showHudud(name){
+ const base=rows("База");
+ const arr=base.filter(r=>Array.isArray(r)&&String(r[6]||"").toLowerCase().includes(name.toLowerCase()));
+ renderList(name,arr);
+}
+
+function showSheet(sheet,title){
+ const arr=rows(sheet);
+ renderList(title||sheet,arr);
+}
+
+function renderList(title,arr){
+app.innerHTML=`
+<div class="back" onclick="showKuduk()">← КУДУК РЎЙХАТИ</div>
+<div class="back" onclick="showMenu()">⌂ меню</div>
+<h1>${title}</h1>
+<div class="card">Жами қаторлар<br><b style="font-size:50px">${arr.length}</b></div>
+<input id="q" placeholder="Қидирув..." oninput="drawRows()">
+<div id="list"></div>`;
+window.CURRENT=arr;
+draw(arr);
+}
+
+function drawRows(){
+ const q=document.getElementById('q').value.toLowerCase();
+ draw(CURRENT.filter(r=>JSON.stringify(r).toLowerCase().includes(q)));
+}
+
+function draw(arr){
+list.innerHTML=arr.slice(0,100).map(r=>`
+<div class="card">
+${Array.isArray(r)?r.filter(x=>x).join(" / "):JSON.stringify(r)}
+</div>`).join('');
+}
+
+load();
+</script>
+</body>
+</html>
